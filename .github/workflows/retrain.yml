@@ -1,1 +1,49 @@
+name: Stock AI Training Automation
 
+on:
+  schedule:
+    - cron: '30 23 * * *' # 매일 오전 8시 30분(KST) 실행
+  workflow_dispatch:      # 수동 테스트를 위한 버튼 활성화
+
+jobs:
+  train-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 깃허브 저장소에 커밋/푸시할 수 있는 권한
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install yfinance torch pandas numpy scikit-learn joblib FinanceDataReader
+
+      - name: Run Train Script
+        run: |
+          # 요일 계산 (1:월, 6:토)
+          DOW=$(date +%u)
+          if [ "$DOW" -eq 6 ]; then
+            echo "토요일 - 주간 학습 모드(50 epochs)"
+            python run_all_retrain.py weekly
+          else
+            echo "평일 - 일일 최신화 모드(3 epochs)"
+            python run_all_retrain.py daily
+          fi
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # 변경사항이 있는지 확인 후 커밋
+          if [[ -n $(git status --porcelain) ]]; then
+            git add models/ managed_tickers_map.json
+            git commit -m "Auto-update: Models retrained $(date +'%Y-%m-%d')"
+            git push
+          else
+            echo "변경 사항 없음, 푸시 건너뜀"
+          fi
