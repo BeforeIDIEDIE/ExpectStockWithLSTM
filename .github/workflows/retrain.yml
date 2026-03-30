@@ -36,10 +36,10 @@ jobs:
           DOW=$(date +%u)
           if [ "$DOW" -eq 6 ]; then
             echo "토요일 - 주간 학습 모드(50 epochs)"
-            python run_all_retrain.py weekly
+            python RetrainEveryTicker.py weekly
           else
             echo "평일 - 일일 최신화 모드(3 epochs)"
-            python run_all_retrain.py daily
+            python RetrainEveryTicker.py daily
           fi
 
       - name: Commit and Push
