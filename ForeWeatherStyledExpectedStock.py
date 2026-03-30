@@ -83,7 +83,7 @@ class StockLSTM(nn.Module):
 
 # --- [3. 핵심 실행 파이프라인] ---
 
-def run_prediction_pipeline(SYMBOL_INPUT):
+def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
     SAVE_DIR = f"./models/{SYMBOL_INPUT}"
     os.makedirs(SAVE_DIR, exist_ok=True)
     
@@ -145,14 +145,18 @@ def run_prediction_pipeline(SYMBOL_INPUT):
 
         if os.path.exists(MODEL_FILE):
             model.load_state_dict(torch.load(MODEL_FILE))
-            days_passed = (datetime.datetime.now() - datetime.datetime.strptime(last_date, '%Y-%m-%d')).days
-            epochs = max(3, min(30, days_passed // 12))
-            lr = 0.0005
-            print(f"🔄 추가 학습 모드: {epochs} Epochs")
+            if is_weekly:
+                epochs = 50  # 주간 학습: 50번 학습
+                lr = 0.0005
+                print(f"주간 정기 재학습: {epochs} Epochs")
+            else:
+                epochs = 3   # 일일 업데이트: 3번
+                lr = 0.0003  # 일일 학습은 낮은 학습률으로 (overfitting방지)
+                print(f"일일 최신화: {epochs} Epochs")
         else:
             epochs = 300
             lr = 0.001
-            print(f"🚀 신규 모델 학습 모드 (300 Epochs)")
+            print(f"신규 모델 학습 (300 Epochs)")
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         criterion = nn.MSELoss()
