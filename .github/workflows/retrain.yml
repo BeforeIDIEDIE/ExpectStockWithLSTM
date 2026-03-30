@@ -23,10 +23,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # PyTorch CPU 버전 설치 (용량 다이어트 및 설치 속도 향상)
+          # PyTorch CPU 버전 설치
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          # 나머지 필요한 라이브러리 설치
-          pip install yfinance pandas numpy scikit-learn joblib FinanceDataReader
+          # 나머지 라이브러리 설치 (FinanceDataReader 설치명 수정 및 pandas 버전 고정)
+          pip install yfinance numpy joblib scikit-learn
+          pip install "pandas<2.2.0"  # 파이썬 3.10 호환을 위해 버전 제한
+          pip install finance-datareader # 정확한 설치 명칭으로 수정
 
       - name: Run Train Script
         run: |
