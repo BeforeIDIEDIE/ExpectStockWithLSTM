@@ -47,13 +47,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 변경사항 추가 (캐시 파일 제외를 위해 models 폴더 등 특정)
+          # 1. 모델 폴더와 json 파일만 스테이징 (임시 파일 __pycache__ 등은 무시)
           git add models/ managed_tickers_map.json || true
           
-          # 변경사항이 있을 때만 커밋하고 푸시
-          if [ -n "$(git status --porcelain)" ]; then
+          # 2. 커밋할 내용이 있는지 확인 (diff가 비어있으면 0, 있으면 1 반환)
+          if git diff --staged --quiet; then
+            echo "변경 사항 없음, 푸시 생략"
+          else
             git commit -m "Auto-update: Models retrained $(date +'%Y-%m-%d')"
             git push
-          else
-            echo "변경 사항이 없습니다. 작업을 종료합니다."
           fi
