@@ -50,7 +50,7 @@ def retrain_all():#토요일마다 매일 학습 제외 주간학습 실
     report_content = f"📊 AI 주식 예측 [{mode} 업데이트]\n"
     report_content += "="*40 + "\n"
 
-    for ticker in ticker_map.keys():
+    for ticker, name in ticker_map.items():
         print(f"\n{'='*30}")
         print(f"대상 종목: {ticker}")
         try:
