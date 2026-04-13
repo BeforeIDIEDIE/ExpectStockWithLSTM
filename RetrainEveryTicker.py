@@ -21,8 +21,7 @@ def send_email_report(subject, body):
     msg['From'] = SENDER_EMAIL
     msg['To'] = RECEIVER_EMAIL
     msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-    
+    msg.attach(MIMEText(body, 'plain'))   
     try:
         # Gmail SMTP 서버 설정
         server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -55,8 +54,8 @@ def retrain_all():#토요일마다 매일 학습 제외 주간학습 실
         print(f"대상 종목: {ticker}")
         try:
             # 파라미터 전달
-            run_prediction_pipeline(ticker, is_weekly=is_weekly)
-            report_content += f"{name} ({ticker}): 해당 업데이트 완료\n"
+            prediction_result = run_prediction_pipeline(ticker, is_weekly=is_weekly)
+            report_content += f"{name}\n   {prediction_result}\n\n"
         except Exception as e:
             print(f"❌ {ticker} 실행 중 오류 발생: {e}\n")
             report_content += f"{name} ({ticker}): 오류 발생 ({e})\n"

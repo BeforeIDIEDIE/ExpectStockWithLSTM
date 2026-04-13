@@ -106,7 +106,7 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
     df = yf.download(SYMBOL_INPUT, start="2015-01-01", end=today)
     if df.empty or len(df) < LOOK_BACK: 
         print(f"❌ {SYMBOL_INPUT}의 데이터가 부족합니다.")
-        return
+        return 
 
     # 지표 계산
     df['MA5'] = df['Close'].rolling(window=5).mean()
@@ -206,6 +206,8 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
     print(f"📈 종목: {SYMBOL_INPUT} | 현재가: {current_price:.2f} | 예상가: {pred_price:.2f}")
     print(f"📊 예측: {weather} ({diff_pct:+.2f}%)")
     print("-" * 45)
+    result_str = f"{SYMBOL_INPUT} | 현재: {current_price:.2f} | 예상: {pred_price:.2f} ({weather} {diff_pct:+.2f}%)"
+    return result_str
 
 # --- [4. 메인 메뉴] ---
 def main_menu():
