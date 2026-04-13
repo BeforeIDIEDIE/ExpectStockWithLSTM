@@ -31,6 +31,11 @@ jobs:
           pip install finance-datareader # 정확한 설치 명칭으로 수정
 
       - name: Run Train Script
+        env:
+          # GitHub Secrets에 등록한 이름을 파이썬 os.getenv로 연결
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
         run: |
           # 요일 계산 (1:월, 6:토)
           DOW=$(date +%u)
