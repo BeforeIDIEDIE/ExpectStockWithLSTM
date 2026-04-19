@@ -11,20 +11,7 @@ import FinanceDataReader as fdr
 from sklearn.preprocessing import MinMaxScaler
 
 #미완 리스트
-# 7. ETF | 레버리지 | 일반 구분해서 LOOK BACK혹은 학습 EPOCH 조정 필요할듯
-# 9. 메일로 보내기 재학습후
-#10. 트럼프 연설같이 특정 사건후에 해당 사건발생때의 학습이 기존 학습에 영향을 무지하게 끼치는 것으로 보임 따라서 epoch를 낮추거나 하는등 대안 필요?
-
-#완성 리스트
-# 1. 날짜비례 epoch 추가학습방안 : 현재는 추가데이터를 고정 3번 학습함, 다만 기본 학습 epoch가 300임을 감안하면 이에맞추어 추가적인 epoch조정이 필요할 것으로 보임
-# 3. Symbol 입력시 별도의 폴더 생성 -> 해당 폴더에 각각 모델, scaler, info파일 생성 관리
-# 4. 한글 입력시 해당 한글을 Symbol로 변경.
-# 5. 이거 국장도 되나?
-# 2. 현재는 종가만을 입력함, 다만 데이터가 너무 부족해보임, 적어도 근 10일의 그래프 추세에 따른 예측을 수행하도록 하는것이 좋을
-# 6. scaler요인이 너무 부족 -> RSI와 MACD를 고려?
-# 8. 현재 추가적인 정보 있을시 3번 더 학습함, 다만 이러할 경우 최신의 정보에 너무 OVERFITTING된 정보가 들어올 가능성이 있음 따라서 대안으로 매일, 주간 마다 추가적인 학습을 수행하는 것이 좋아보임
-# 8-1. 문제는 추가적인 학습을 특정 시간에 수해하는것은 번거롭고, 추후 다른 종목도 추가할 것을 고려하면 좋은 대안은 아님 따라서 추후 GITHUB서버를 빌려 해당 작업을 수행하도록 할 생각(자동화도)
-
+#1. 최근 데이터 가중치 부여 방법
 
 
 # --- [설정 및 경로] ---
@@ -98,7 +85,7 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
     ticker_obj = yf.Ticker(SYMBOL_INPUT)
     is_etf = ticker_obj.info.get('quoteType') == 'ETF'
     LOOK_BACK = 20 if is_etf else 10
-    FEATURES = ['Close', 'Volume', 'MA5', 'MA20', 'RSI', 'MACD']
+    FEATURES = ['Close', 'Volume', 'MA5', 'MA20', 'RSI', 'MACD', 'Nasdaq']
     INPUT_SIZE = len(FEATURES)
 
     # 데이터 로드
@@ -109,6 +96,10 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
         return 
 
     # 지표 계산
+    nasdaq_df = yf.download("^IXIC", start="2015-01-01", end=today)[['Close']].rename(columns={'Close': 'Nasdaq'})
+    df = df.join(nasdaq_df, how='left')
+    df['Nasdaq'] = df['Nasdaq'].ffill().bfill()
+
     df['MA5'] = df['Close'].rolling(window=5).mean()
     df['MA20'] = df['Close'].rolling(window=20).mean()
     delta = df['Close'].diff()
