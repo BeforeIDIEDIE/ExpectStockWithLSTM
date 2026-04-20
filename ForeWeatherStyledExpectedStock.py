@@ -138,32 +138,44 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
         y_train = torch.FloatTensor(np.array(y)).unsqueeze(-1)
 
         if os.path.exists(MODEL_FILE):
+            #04-20 갱신 모델 최신화시 근 250일의 정보만을 학
+            target_X = X_train[-250:]
+            target_y = y_train[-250:]
+            
             model.load_state_dict(torch.load(MODEL_FILE))
-            if is_weekly:
-                epochs = 50  # 주간 학습: 50번 학습
+            
+            if is_weekly:#주간학습은 epoch가 50
+               current_epochs = 50
                 lr = 0.0005
-                print(f"주간 정기 재학습: {epochs} Epochs")
+                print(f"주간 정기 재학습: {current_epochs} Epochs")
             else:
-                epochs = 3   # 일일 업데이트: 3번
+                current_epochs = 3   # 일일 업데이트: 3번
                 lr = 0.0003  # 일일 학습은 낮은 학습률으로 (overfitting방지)
-                print(f"일일 최신화: {epochs} Epochs")
+                print(f"일일 최신화: {current_epochs} Epochs")
         else:
-            epochs = 300
+            target_X = X_train
+            target_y = y_train
+            current_epochs = 300
             lr = 0.001
-            print(f"신규 모델 학습 (300 Epochs)")
+            print(f"신규 모델 학습 ({current_epochs} Epochs)")
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-        criterion = nn.MSELoss()
+        def weighted_mse_loss(output, target, weight):
+            loss = torch.mean(weight * (output - target) ** 2)
+            return loss
+        num_samples = len(target_y)
+        weights = torch.linspace(0.1, 1.0, steps=num_samples).to(X_train.device).unsqueeze(-1)
 
         model.train()
-        for epoch in range(epochs):
+        for epoch in range(current_epochs):
             optimizer.zero_grad()
-            outputs = model(X_train)
-            loss = criterion(outputs, y_train)
-            if (epoch + 1) % 10 == 0 or epoch == 0:
-                print(f"Epoch [{epoch+1}/{epochs}] - Loss: {loss.item():.6f}")
+            outputs = model(target_X)
+            loss = weighted_mse_loss(outputs, target_y, weights) # 가중치 적용
             loss.backward()
             optimizer.step()
+    
+            if (epoch + 1) % 10 == 0 or current_epochs == 0:
+                print(f"Epoch [{epoch+1}/{current_epochs}] - Weighted Loss: {loss.item():.6f}")
 
         torch.save(model.state_dict(), MODEL_FILE)
         with open(INFO_FILE, 'w') as f: json.dump({"last_train_date": today}, f)
