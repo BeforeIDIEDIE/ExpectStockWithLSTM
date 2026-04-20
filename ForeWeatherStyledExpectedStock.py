@@ -138,19 +138,21 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
         y_train = torch.FloatTensor(np.array(y)).unsqueeze(-1)
 
         if os.path.exists(MODEL_FILE):
-            #04-20 갱신 모델 최신화시 근 250일의 정보만을 학
-            target_X = X_train[-250:]
-            target_y = y_train[-250:]
+            #04-20 갱신 모델 최신화시 근 60일의 정보만을 학seup
+            # 기간 갱신시 학습률도 비례하게 줄일것 
+            learning_period = 60
+            target_X = X_train[-learning_period:]
+            target_y = y_train[-learning_period:]
             
             model.load_state_dict(torch.load(MODEL_FILE))
             
             if is_weekly:#주간학습은 epoch가 50
                current_epochs = 50
-               lr = 0.0005
+               lr = 0.0004
                print(f"주간 정기 재학습: {current_epochs} Epochs")
             else:
                 current_epochs = 3   # 일일 업데이트: 3번
-                lr = 0.0003  # 일일 학습은 낮은 학습률으로 (overfitting방지)
+                lr = 0.0002  # 일일 학습은 낮은 학습률으로 (overfitting방지)
                 print(f"일일 최신화: {current_epochs} Epochs")
         else:
             target_X = X_train
