@@ -146,8 +146,8 @@ def run_prediction_pipeline(SYMBOL_INPUT,is_weekly=False):
             
             if is_weekly:#주간학습은 epoch가 50
                current_epochs = 50
-                lr = 0.0005
-                print(f"주간 정기 재학습: {current_epochs} Epochs")
+               lr = 0.0005
+               print(f"주간 정기 재학습: {current_epochs} Epochs")
             else:
                 current_epochs = 3   # 일일 업데이트: 3번
                 lr = 0.0003  # 일일 학습은 낮은 학습률으로 (overfitting방지)
